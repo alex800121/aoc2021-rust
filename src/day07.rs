@@ -1,5 +1,7 @@
 use project_root::get_project_root;
 
+fn bi_binary()
+
 pub fn run(day: usize) {
     // let input = std::fs::read_to_string(format!(
     //     "{}/input/input{:02}.txt",
