@@ -1,8 +1,15 @@
+use std::collections::{BTreeSet, BTreeMap};
+
 use itertools::Itertools;
 use project_root::get_project_root;
-use petgraph::{Graph, graph::UnGraph, data::Build};
+use petgraph::{Graph, graph::{UnGraph, NodeIndex}};
 
-
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
+struct State {
+    current_node: u16,
+    visited_small: u16,
+    visited_once: Option<u16>,
+}
 #[derive(Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 enum Node<'a> {
     Start,
@@ -18,7 +25,7 @@ impl<'a> Node<'a> {
             "start" => Start,
             "end" => End,
             s => {
-                let mut e = s.clone().chars();
+                let mut e = s.chars();
                 if let Some(c) = e.next() {
                     if c.is_lowercase() {
                         Lower(s)
@@ -32,10 +39,7 @@ impl<'a> Node<'a> {
         }
     }
 }
-fn insert_node(i: &mut u32, nodes: &mut Vec<Node>, node: &str) -> u32 {
-    let node = Node::from_str(node);
-    unimplemented!()
-}
+
 pub fn run(day: usize) {
     let input = std::fs::read_to_string(format!(
         "{}/input/input{:02}.txt",
@@ -43,29 +47,28 @@ pub fn run(day: usize) {
         day
     ))
     .unwrap();
-    let mut g: UnGraph<&str, ()> = Graph::new_undirected();
-    let mut nodes = Vec::new();
-    let mut i = 0;
+    let mut nodes: BTreeMap<Node, NodeIndex> = BTreeMap::new();
+    let mut g: UnGraph<Node, ()> = Graph::new_undirected();
     for s in input.lines() {
         if let Some((a, b)) = s.split_once('-') {
             let a = Node::from_str(a);
+            let ia = if let Some(n) = nodes.get(&a) {
+                *n
+            } else {
+                let ia = g.add_node(a);
+                nodes.insert(a, ia);
+                ia
+            };
             let b = Node::from_str(b);
-            let mut ia = 0;
-            let mut ib = 0;
-            if let Some((n, _)) = nodes.iter().find_position(|x| **x == a) {
-                ia = n;
+            let ib = if let Some(n) = nodes.get(&b) {
+                *n
             } else {
-                nodes.push(a);
-                ia = i;
-                i += 1;
-            }
-            if let Some((n, _)) = nodes.iter().find_position(|x| **x == b) {
-                ib = n;
-            } else {
-                nodes.push(b);
-                ib = i;
-                i += 1;
-            }
+                let ib = g.add_node(b);
+                nodes.insert(b, ib);
+                ib
+            };
+            g.add_edge(ia, ib, ());
         }
     }
+    dbg!(&g);
 }
