@@ -1,12 +1,10 @@
-use std::collections::BTreeMap;
-
-use itertools::Itertools;
 use petgraph::{
     graph::{NodeIndex, UnGraph},
     visit::IntoNodeReferences,
     Graph,
 };
 use project_root::get_project_root;
+use std::collections::BTreeMap;
 
 #[derive(Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Hash)]
 struct State {
@@ -44,22 +42,22 @@ impl<'a> Node<'a> {
     }
 }
 
-// fn bfs(g: &UnGraph<Node, ()>, state: State) -> Vec<State> {
 fn bfs(g: &UnGraph<Node, ()>, state: State) -> u32 {
     use Node::*;
-    // let mut start = BTreeMap::from([(state, 1)]);
-    let mut start = vec![state];
+    let mut start = BTreeMap::from([(state, 1)]);
+    // let mut start = vec![state];
     let mut acc = 0;
     while !start.is_empty() {
-        let mut new_start = Vec::new();
-        // let mut new_start = BTreeMap::new();
-        for s in start.into_iter() {
-            // for (s, n) in start.into_iter() {
+        // let mut new_start = Vec::new();
+        let mut new_start = BTreeMap::new();
+        // for s in start.into_iter() {
+        for (s, n) in start.into_iter() {
             // dbg!(s, g.neighbors_undirected(s.current_node.into()).collect_vec());
             for next in g.neighbors_undirected(s.current_node.into()) {
                 match g.node_weight(next) {
                     Some(End) => {
-                        acc += 1;
+                        acc += n;
+                        // acc += 1;
                         // acc_v.push(s);
                     }
                     // Some(End) => acc += n,
@@ -69,12 +67,12 @@ fn bfs(g: &UnGraph<Node, ()>, state: State) -> u32 {
                             visited: s.visited | (1 << next.index()),
                             ..s
                         };
-                        // if let Some(x) = new_start.get_mut(&next_s) {
-                        //     *x += n;
-                        // } else {
-                        //     new_start.insert(next_s, n);
-                        // }
-                        new_start.push(next_s);
+                        if let Some(x) = new_start.get_mut(&next_s) {
+                            *x += n;
+                        } else {
+                            new_start.insert(next_s, n);
+                        }
+                        // new_start.push(next_s);
                     }
                     Some(Lower(_)) if (s.visited >> next.index()) & 1 == 0 => {
                         let next_s = State {
@@ -82,12 +80,12 @@ fn bfs(g: &UnGraph<Node, ()>, state: State) -> u32 {
                             visited: s.visited | (1 << next.index()),
                             ..s
                         };
-                        // if let Some(x) = new_start.get_mut(&next_s) {
-                        //     *x += n;
-                        // } else {
-                        //     new_start.insert(next_s, n);
-                        // }
-                        new_start.push(next_s);
+                        if let Some(x) = new_start.get_mut(&next_s) {
+                            *x += n;
+                        } else {
+                            new_start.insert(next_s, n);
+                        }
+                        // new_start.push(next_s);
                     }
                     Some(Lower(_))
                         if (s.visited >> next.index()) & 1 == 1 && s.visited_once.is_none() =>
@@ -97,12 +95,12 @@ fn bfs(g: &UnGraph<Node, ()>, state: State) -> u32 {
                             visited_once: Some(next.index() as u32),
                             ..s
                         };
-                        // if let Some(x) = new_start.get_mut(&next_s) {
-                        //     *x += n;
-                        // } else {
-                        //     new_start.insert(next_s, n);
-                        // }
-                        new_start.push(next_s);
+                        if let Some(x) = new_start.get_mut(&next_s) {
+                            *x += n;
+                        } else {
+                            new_start.insert(next_s, n);
+                        }
+                        // new_start.push(next_s);
                     }
                     _ => {}
                 }
@@ -145,7 +143,7 @@ pub fn run(day: usize) {
         }
     }
     // dbg!(&g);
-    dbg!(bfs(
+    println!("day12a: {}", bfs(
         &g,
         State {
             current_node: g
@@ -158,7 +156,7 @@ pub fn run(day: usize) {
             visited_once: Some(0),
         }
     ));
-    dbg!(bfs(
+    println!("day12b: {}", bfs(
         &g,
         State {
             current_node: g
