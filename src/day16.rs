@@ -18,7 +18,7 @@ fn to_num(input: &[bool]) -> u64 {
     acc
 }
 fn parse_packet(input: &[bool]) -> (&[bool], Packet) {
-    dbg!(input.len());
+    // dbg!(input.len());
     let version = to_num(&input[0..3]) as u8;
     let type_id = to_num(&input[3..6]) as u8;
     if 4 == type_id {
@@ -43,15 +43,17 @@ fn parse_packet(input: &[bool]) -> (&[bool], Packet) {
     if let Some(false) = input.get(6) {
         let total_len = to_num(&input[7..22]) as usize;
         let mut sub_packets = Vec::new();
-        let next_input = loop {
-            let (next_input, p) = parse_packet(&input[22..(22 + total_len)]);
+        let mut m = &input[22..(22 + total_len)];
+        loop {
+            let (n, p) = parse_packet(m);
             sub_packets.push(p);
-            if next_input.is_empty() {
-                break next_input;
+            if n.is_empty() {
+                break;
             }
-        };
+            m = n;
+        }
         (
-            next_input,
+            &input[(22 + total_len)..],
             Packet {
                 version,
                 type_id,
@@ -89,8 +91,86 @@ fn to_bin(input: &str) -> Option<Bin> {
     }
     Some(output)
 }
+fn calc_version(p: &Packet) -> u64 {
+    match p {
+        Packet {
+            version: v,
+            type_id: _,
+            sub_packets: Either::Left(_),
+        } => *v as u64,
+        Packet {
+            version: v,
+            type_id: _,
+            sub_packets: Either::Right(ps),
+        } => *v as u64 + (ps.iter().map(calc_version).sum::<u64>()),
+    }
+}
+fn calc(p: &Packet) -> u64 {
+    match p {
+        Packet {
+            version: _,
+            type_id: 0,
+            sub_packets: Either::Right(s),
+        } => s.iter().map(calc).sum::<u64>(),
+        Packet {
+            version: _,
+            type_id: 1,
+            sub_packets: Either::Right(s),
+        } => s.iter().map(calc).product::<u64>(),
+        Packet {
+            version: _,
+            type_id: 2,
+            sub_packets: Either::Right(s),
+        } => s.iter().map(calc).min().unwrap(),
+        Packet {
+            version: _,
+            type_id: 3,
+            sub_packets: Either::Right(s),
+        } => s.iter().map(calc).max().unwrap(),
+        Packet {
+            version: _,
+            type_id: 4,
+            sub_packets: Either::Left(s),
+        } => *s,
+        Packet {
+            version: _,
+            type_id: 5,
+            sub_packets: Either::Right(s),
+        } => {
+            if calc(s.first().unwrap()) > calc(s.get(1).unwrap()) {
+                1
+            } else {
+                0
+            }
+        },
+        Packet {
+            version: _,
+            type_id: 6,
+            sub_packets: Either::Right(s),
+        } => {
+            if calc(s.first().unwrap()) < calc(s.get(1).unwrap()) {
+                1
+            } else {
+                0
+            }
+        },
+        Packet {
+            version: _,
+            type_id: 7,
+            sub_packets: Either::Right(s),
+        } => {
+            if calc(s.first().unwrap()) == calc(s.get(1).unwrap()) {
+                1
+            } else {
+                0
+            }
+        },
+        _ => unreachable!(),
+    }
+}
 pub fn run(day: usize) {
     let input = std::fs::read_to_string(format!(
+        // "{}/input/test{:02}.txt",
         "{}/input/input{:02}.txt",
         get_project_root().unwrap().to_str().unwrap(),
         day
@@ -98,5 +178,6 @@ pub fn run(day: usize) {
     .unwrap();
     let input = to_bin(input.trim()).unwrap();
     let (input, ans) = parse_packet(&input[..]);
-    dbg!(ans);
+    println!("day16a: {}", calc_version(&ans));
+    println!("day16b: {}", calc(&ans));
 }
