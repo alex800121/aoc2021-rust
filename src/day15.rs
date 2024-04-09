@@ -31,30 +31,46 @@ pub fn run(day: usize) {
         .collect_vec()
         .try_into()
         .unwrap();
-    let big_m: BigMap = from_fn(|y| from_fn(|x| {
-        let ym = y % 100;
-        let xm = x % 100;
-        let yd = y / 100;
-        let xd = x / 100;
-        let a = m[ym][xm];
-        ((a - 1 + yd as isize + xd as isize) % 9) + 1
-    }));
-    println!("day15a: {}", astar(
-        &(0, 0),
-        |p| adjacent(*p).into_iter().filter_map(|x| {
-            let c = m.get(x.1 as usize).and_then(|v| v.get(x.0 as usize))?;
-            Some((x, *c))
-        }),
-        |p| N as isize - p.0 + N as isize - p.1 - 2,
-        |p| *p == (N as isize - 1, N as isize - 1)
-    ).unwrap().1);
-    println!("day15b: {}", astar(
-        &(0, 0),
-        |p| adjacent(*p).into_iter().filter_map(|x| {
-            let c = big_m.get(x.1 as usize).and_then(|v| v.get(x.0 as usize))?;
-            Some((x, *c))
-        }),
-        |p| BIGN as isize - p.0 + BIGN as isize - p.1 - 2,
-        |p| *p == (BIGN as isize - 1, BIGN as isize - 1)
-    ).unwrap().1);
+    println!(
+        "day15a: {}",
+        astar(
+            &(0, 0),
+            |p| adjacent(*p).into_iter().filter_map(|x| {
+                if x.1 >= 0 && x.0 >= 0 && x.1 < N as isize && x.0 < N as isize {
+                    let c = m.get(x.1 as usize).and_then(|v| v.get(x.0 as usize))?;
+                    Some((x, *c))
+                } else {
+                    None
+                }
+            }),
+            |p| N as isize - p.0 + N as isize - p.1 - 2,
+            |p| *p == (N as isize - 1, N as isize - 1)
+        )
+        .unwrap()
+        .1
+    );
+    println!(
+        "day15b: {}",
+        astar(
+            &(0, 0),
+            |p| adjacent(*p).into_iter().filter_map(|x| {
+                if x.1 >= 0 && x.0 >= 0 && x.1 < BIGN as isize && x.0 < BIGN as isize {
+                    let (x, y) = x;
+                    let ym = y % 100;
+                    let xm = x % 100;
+                    let yd = y / 100;
+                    let xd = x / 100;
+                    let a = m[ym as usize][xm as usize];
+                    let c = ((a - 1 + yd as isize + xd as isize) % 9) + 1;
+                    Some(((x, y), c))
+                } else {
+                    None
+                }
+            }),
+            |p| BIGN as isize - p.0 + BIGN as isize - p.1 - 2,
+            |p| *p == (BIGN as isize - 1, BIGN as isize - 1)
+        )
+        .unwrap()
+        .1
+    );
 }
