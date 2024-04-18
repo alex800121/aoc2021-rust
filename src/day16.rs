@@ -177,7 +177,7 @@ pub fn run(day: usize) {
     ))
     .unwrap();
     let input = to_bin(input.trim()).unwrap();
-    let (input, ans) = parse_packet(&input[..]);
+    let (_input, ans) = parse_packet(&input[..]);
     println!("day16a: {}", calc_version(&ans));
     println!("day16b: {}", calc(&ans));
 }

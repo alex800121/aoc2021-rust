@@ -1,5 +1,3 @@
-use std::array::from_fn;
-
 use itertools::Itertools;
 use pathfinding::prelude::astar;
 use project_root::get_project_root;
@@ -7,7 +5,6 @@ use project_root::get_project_root;
 const N: usize = 100;
 const BIGN: usize = 500;
 type Map = [[isize; N]; N];
-type BigMap = [[isize; BIGN]; BIGN];
 type Index = (isize, isize);
 fn adjacent(p: Index) -> [Index; 4] {
     [(0, 1), (0, -1), (-1, 0), (1, 0)].map(|(a, b)| (p.0 + a, p.1 + b))
@@ -61,7 +58,7 @@ pub fn run(day: usize) {
                     let yd = y / 100;
                     let xd = x / 100;
                     let a = m[ym as usize][xm as usize];
-                    let c = ((a - 1 + yd as isize + xd as isize) % 9) + 1;
+                    let c = ((a - 1 + yd + xd) % 9) + 1;
                     Some(((x, y), c))
                 } else {
                     None
